@@ -88,7 +88,8 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
                 marginBottom: "10px",
                 padding: "10px",
                 border: selectedSchool?.school_id_giga === school.schoolId ? "2px solid red" : "1px solid #ccc",
-                cursor: "pointer"
+                cursor: "pointer",
+                boxSizing: "border-box"
               }}
               onClick={() => {
                 const lat = parseFloat(school.lat);
