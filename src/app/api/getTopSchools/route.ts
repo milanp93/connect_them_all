@@ -1,4 +1,4 @@
-import { readCSVRecommendation, RecommendationType } from '@/scripts/mergeRecommendationCsv';
+import { readCSVRecommendation, RecommendationDetailedType } from '@/scripts/mergeRecommendationCsv';
 import { NextResponse } from 'next/server';
 import path from 'path';
 
@@ -7,8 +7,7 @@ export async function GET() {
     const inputCSVPath = path.join(process.cwd(), 'public', 'ready-data.csv');
     
     try {
-      const rows: RecommendationType[] = await readCSVRecommendation(inputCSVPath, ';');
-      console.log(rows);
+      const rows: RecommendationDetailedType[] = await readCSVRecommendation(inputCSVPath, ';');
       return NextResponse.json({
         success: true,
         data: rows,

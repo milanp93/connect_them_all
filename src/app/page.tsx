@@ -15,7 +15,7 @@ const Page = () => {
         method: 'GET'
       });
       const data = await response.json();
-      setSchoolsAndTowers(data);
+      setSchoolsAndTowers(data.data);
       console.log(data);
     }
     getSchoolsAndTowers()
@@ -24,15 +24,14 @@ const Page = () => {
         method: 'GET'
       });
       const data = await response.json();
-      setRecommended(data);
-      console.log(data);
+      setRecommended(data.data);
+      console.log("top schools:", data);
     }
     getRecommendation()
   }, []);
-  console.log("REC:",recommended);
+
   return (
     <div>
-      <h1>Server Side Rendered Page</h1>
       {!!schoolsAndTowers && !!recommended && <ConnectivityMap schoolsAndTowers={schoolsAndTowers} recommended={recommended} />}
     </div>
   );

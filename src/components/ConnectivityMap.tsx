@@ -9,7 +9,7 @@ import React, {  FC } from "react";
 // } from "@react-google-maps/api";
 // import type { GoogleMap as GoogleMapType } from "@react-google-maps/api";
 import { PopulationData } from "@/scripts/mergePopulationDenciryCsv";
-import { RecommendationType } from "@/scripts/mergeRecommendationCsv";
+import { RecommendationDetailedType } from "@/scripts/mergeRecommendationCsv";
 
 // const containerStyle = {
 //   width: "100%",
@@ -18,7 +18,7 @@ import { RecommendationType } from "@/scripts/mergeRecommendationCsv";
 
 // const defaultCenter = { lat: 43.85, lng: 18.40 };
 
-const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: RecommendationType[]}> = ({ recommended}) => {
+const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: RecommendationDetailedType[]}> = ({ recommended}) => {
   // const [csvData, setCsvData] = useState<PopulationData[]>(schoolsAndTowers);
 //   const [topSchools, setTopSchools] = useState<SchoolData[]>([]);
   // const [selectedSchool, setSelectedSchool] = useState<PopulationData | null>(null);
@@ -85,7 +85,7 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
           height: "100vh"
         }}
       >
-        <h3>Top 5 Schools</h3>
+        <h3>Top 5 Schools to connect</h3>
         <ul style={{ listStyle: "none", padding: 0 }}>
           {recommended && recommended?.map((school, idx) => (
             <li
@@ -104,7 +104,7 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
             //     }
             //   }}
             >
-              {/* <strong>{school.school_name}</strong> */}
+              <strong>{school.schoolName}</strong>
               <br />
               ID: {school.schoolId}
               <br />

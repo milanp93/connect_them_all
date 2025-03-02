@@ -23,8 +23,8 @@ export function readCSV(filePath: string, delimiter = ';') {
 }
 
 export function readCSVRecommendation(filePath: string, delimiter = ';') {
-  return new Promise<RecommendationType[]>((resolve, reject) => {
-    const rows: RecommendationType[] = [];
+  return new Promise<RecommendationDetailedType[]>((resolve, reject) => {
+    const rows: RecommendationDetailedType[] = [];
     fs.createReadStream(filePath)
       .pipe(csv({ separator: delimiter }))
       .on('data', (row) => rows.push(row))
@@ -42,8 +42,14 @@ export type RecommendationType = {
   alternativeSolutionEstimatedCost: string,
 }
 
+export type RecommendationDetailedType = RecommendationType &{
+  lat: string,
+  lon: string,
+  schoolName: string,
+}
+
 // Helper: Write an array of row objects to a CSV file.
-function writeCSV(filePath: string, rows: RecommendationType[], delimiter = ';') {
+function writeCSV(filePath: string, rows: RecommendationDetailedType[], delimiter = ';') {
   const headers = Object.keys(rows[0]).map((key) => ({ id: key, title: key }));
   const csvWriter = createObjectCsvWriter({
     path: filePath,
@@ -74,7 +80,7 @@ async function getRecommendationForSchool(prompt: string) {
           content: prompt,
         },
       ],
-      max_tokens: 4096,
+      max_tokens: 8192,
       stream: false,
     }),
   });
@@ -193,16 +199,31 @@ ${JSON.stringify(inputData)}
         }]
     } = JSON.parse(cleanedResponse);
     console.log(`Got recommendation Object content:`, recommendationObject);
-    const recommendationCSVArray: RecommendationType[] = recommendationObject.results.map((item) => {
-      return {
+    const rowsTree: { [key: string]: PopulationData } = {}
+    for(const row of rows){
+      rowsTree[row.school_id_giga] = row
+    }
+    console.log(`Got rowsTree:`, rowsTree);
+    const recommendationCSVArray: RecommendationDetailedType[] = recommendationObject.results.map((item) => {
+    console.log(`Got rowsTree[item.schoolId].school_name:`, rowsTree[item.schoolId].school_name);
+    console.log(`Got rowsTree[item.schoolId].latitude:`, rowsTree[item.schoolId].latitude);
+    console.log(`Got rowsTree[item.schoolId].longitude:`, rowsTree[item.schoolId].longitude);
+    return {
         schoolId: item.schoolId,
         scoreOfImpact: item.scoreOfImpact,
         recommendedSolutionWhy: item.recommendedSolution.why,
         recommendedSolutionEstimatedCost: item.recommendedSolution.estimatedCost,
         alternativeSolutionWhyAndWhyIsWorse: item.alternativeSolution.whyAndWhyIsWorse,
         alternativeSolutionEstimatedCost: item.alternativeSolution.estimatedCost,
+        schoolName: rowsTree[item.schoolId].school_name,
+        lat: rowsTree[item.schoolId].latitude,
+        lon: rowsTree[item.schoolId].longitude,
+
       }
     })
+
+
+
     await writeCSV(outputCSVPath, recommendationCSVArray, ';');
     console.log(`Successfully wrote ${recommendationCSVArray.length} rows to ${outputCSVPath}`);
   } catch (err) {
