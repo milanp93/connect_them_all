@@ -3,62 +3,43 @@ import React, {  FC, useEffect, useState } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
-  // LoadScript,
   Marker,
   Polyline,
   InfoWindow,
   Circle
 } from "@react-google-maps/api";
-// import type { GoogleMap as GoogleMapType } from "@react-google-maps/api";
 import { PopulationData } from "@/scripts/mergePopulationDenciryCsv";
 import { RecommendationDetailedType } from "@/scripts/mergeRecommendationCsv";
 
 const containerStyle = {
   width: "100%",
-  height: "100vh"
+  height: "calc(100vh - 50px)"
 };
 
 const defaultCenter = { lat: 43.85, lng: 18.40 };
 
 const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: RecommendationDetailedType[]}> = ({schoolsAndTowers, recommended}) => {
   const [csvData, setCsvData] = useState<PopulationData[]>(schoolsAndTowers);
-  // const [topSchools, setTopSchools] = useState<SchoolData[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<PopulationData | null>(null);
   const [selectedTower, setSelectedTower] = useState<PopulationData | null>(null);
-  // const [panPosition, setPanPosition] = useState<{ lat: number; lng: number }>(
-  //   defaultCenter
-  // );
 
   useEffect(() => {
     setCsvData(schoolsAndTowers);
   }, [schoolsAndTowers]);
 
   const { isLoaded } = useJsApiLoader({
-    // id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_ELEVATION_API_KEY ?? "",
   })
 
   const [map, setMap] = React.useState<google.maps.Map | null>(null)
 
   const onLoad = React.useCallback(function callback(map: google.maps.Map) {
-    // This is just an example of getting and using the map instance!!! don't just blindly copy!
-    // const bounds = new window.google.maps.LatLngBounds(defaultCenter)
-    // map.fitBounds(bounds)
-
     setMap(map)
   }, [])
 
   const onUnmount = React.useCallback(function callback() {
     setMap(null)
   }, [])
-
-  // const mapRef = useRef<GoogleMapType | null>(null);
-  // const [schoolIcon, setSchoolIcon] = useState<any>(null);
-  // const [towerIcon, setTowerIcon] = useState<any>(null);
-
-  // const onMapLoad = (map: any) => {
-  //   mapRef.current = map;
-  // };
 
   const panToLocation = (lat: number, lng: number) => {
     if (map) {
@@ -105,8 +86,8 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
               key={idx}
               style={{
                 marginBottom: "10px",
-                padding: "5px",
-                border: "1px solid #ccc",
+                padding: "10px",
+                border: selectedSchool?.school_id_giga === school.schoolId ? "2px solid red" : "1px solid #ccc",
                 cursor: "pointer"
               }}
               onClick={() => {
@@ -133,7 +114,7 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
 
       {/* Map Container */}
       <div style={{ width: "75%", height: "100%", backgroundColor: "#f9f9f9" }}>
-      <h1 style={{ textAlign: "center", margin: "10px 0px",marginRight: "10px", backgroundColor: "#f0f0f0", fontSize: "2em", fontWeight: "bold" }}>Connect them all</h1>
+      <h1 style={{ height: "50px", textAlign: "center", margin: "10px 0px",marginRight: "10px", backgroundColor: "#f0f0f0", fontSize: "2em", fontWeight: "bold" }}>Connect them all</h1>
       {isLoaded && <GoogleMap
             mapContainerStyle={containerStyle}
             center={defaultCenter}
@@ -230,15 +211,15 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
               </InfoWindow>
                {/* Circle around tower */}
                <Circle
-               center={{ lat: parseFloat(selectedTower.tower_lat), lng: parseFloat(selectedTower.tower_lon) }}
-               radius={parseFloat(selectedTower.range ?? "0")} // assuming range is in km
-               options={{
-                 strokeColor: "red",
-                 strokeOpacity: 0.8,
-                 strokeWeight: 2,
-                 fillColor: "transparent",
-                 fillOpacity: 0,
-               }}
+                center={{ lat: parseFloat(selectedTower.tower_lat), lng: parseFloat(selectedTower.tower_lon) }}
+                radius={parseFloat(selectedTower.range ?? "0")}
+                options={{
+                  strokeColor: "red",
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
+                  fillColor: "transparent",
+                  fillOpacity: 0,
+                }}
              /></>
             )}
             </GoogleMap>}
