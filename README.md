@@ -1,98 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Connect Them All
 
-## Getting Started
+<video width="640" height="360" controls>
+  <source src="./public/demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
-First, ensure you have Node.js installed. You can download it from [nodejs.org](https://nodejs.org/).
+**Connect Them All** is an interactive Next.js application designed for public sector connectivity planning. This project integrates diverse data sources and AI-driven recommendations to identify the best connectivity solutions for schools in underserved regions. By combining geographic data, elevation profiles, population density (extracted from a local GeoTIFF), and AI-generated recommendations via an external API, the application offers actionable insights on the optimal solution for each school.
 
-Then, install the dependencies:
+## Project Overview
 
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
-```
+Modern connectivity planning faces several challenges:
 
-Next, run the development server:
+- **Mapping the Gap:** Identifying which schools are unconnected or under-connected.
+- **Cost Efficiency:** Determining the best solution (fiber, wireless, satellite) based on the distance from a school to the nearest tower, the tower's range, and local terrain conditions.
+- **Impact Estimation:** Incorporating population density to estimate potential benefits (or cost per capita) for each connection.
+- **AI-Driven Recommendations:** Leveraging an external AI API to analyze input data (distance, tower range, elevation profile, population density) and return recommendations along with estimated costs and alternatives.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The app reads merged CSV data containing fields such as:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- School and tower locations
+- Distance from school to tower
+- Elevation profile (sampled at 10 points along the line from school to tower)
+- Population density (extracted from a local GeoTIFF)
+- AI-generated recommendations and impact scores
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+It then displays this information on an interactive Google Map with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Markers for schools and towers
+- Polylines connecting each school to its nearest tower (clickable to show distance)
+- InfoWindows with detailed data when markers are clicked
+- A sidebar listing the top 5 schools (by impact score) for quick navigation
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **CSV Data Integration:** Loads a CSV containing connectivity and demographic data.
+- **Elevation & Population Density Extraction:**
+  - Uses a local GeoTIFF and [geotiff.js](https://www.npmjs.com/package/geotiff) to extract population density.
+  - Integrates elevation profile data (sampled along the school-to-tower line) to understand terrain challenges.
+- **AI Recommendations:**
+  - Sends key input data to an external AI API (aimlapi.com) to obtain recommendations for connectivity solutions along with cost estimates and alternatives.
+- **Interactive Google Maps Display:**
+  - Displays markers for schools and towers.
+  - Draws polylines connecting schools to their nearest towers, with clickable elements that reveal distance information.
+  - A sidebar lists the top 5 schools (by impact score) and allows panning to a selected school.
+- **TypeScript & Next.js:** The project is built with TypeScript and leverages Next.js for both the API routes and the frontend.
 
 ## Project Structure
-
-The project structure is as follows:
 
 ```
 /connect-them-all
 ├── app
-│   ├── page.tsx
-│   └── layout.tsx
+│   ├── api
+│   │   ├── addElevationProfile
+│   │   │   └── route.ts
+│   │   ├── getRecommendations
+│   │   │   └── route.ts
+│   │   ├── getSchools
+│   │   │   └── route.ts
+│   │   ├── getTowers
+│   │   │   └── route.ts
+│   │   ├── getPopulationDensity
+│   │       └── route.ts
+│   ├── layout.tsx
+│   └── page.tsx
+├── components
+│   └── ConnectivityMap.tsx
+├── data
+│   ├── merged.csv
+│   ├── output_with_recommendations.csv
+│   └── pop_density.tif
 ├── public
-│   ├── favicon.ico
-│   └── vercel.svg
+│   ├── data
+│   ├── school-icon.png
+│   └── tower-icon.png
 ├── styles
 │   └── globals.css
-├── .gitignore
+├── .env.local
 ├── package.json
 ├── README.md
 └── tsconfig.json
+
 ```
 
-## Available Scripts
+## Getting Started
 
-In the project directory, you can run:
+### Prerequisites
 
-### `npm run dev`
+- [Node.js](https://nodejs.org/) (v14 or later)
+- A valid Google Maps API key (set as `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in `.env.local`)
+- An API key for aimlapi.com (set as `AIMLAPI_KEY` in `.env.local`)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Installation
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+1. **Clone the Repository:**
 
-### `npm run build`
+   ```bash
+   git clone https://github.com/milanp93/connect_them_all.git
+   cd connect_them_all
+   ```
 
-Builds the app for production to the `.next` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. **Install Dependencies:**
+   ```
+   npm install
+   # or
+   yarn install
+   ```
+3. **Configure Environment Variables:**
 
-### `npm run start`
+   Create a .env.local file in the project root with the following content:
 
-Starts the application in production mode. The application should be built first using `npm run build`.
+   ```
+   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+   AIMLAPI_KEY=your_aimlapi_key_here
+   ```
 
-### `npm run lint`
+### Running the Development Server
 
-Runs the linter to check for code quality issues.
+    Start the development server with
+
+    ```
+    npm run dev
+    # or
+    yarn dev
+    ```
+
+Open http://localhost:3000 in your browser to see the application.
+
+### Deployment
+
+The project can be deployed to Vercel for a seamless [Next.js deployment experience](https://nextjs.org/docs/app/building-your-application/deploying). See Next.js deployment documentation for details.
+
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Contributing
 
