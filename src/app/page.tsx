@@ -1,13 +1,13 @@
 'use client'
 import ConnectivityMap from '@/components/ConnectivityMap';
 import { PopulationData } from '@/scripts/mergePopulationDenciryCsv';
-import { RecommendationType } from '@/scripts/mergeRecommendationCsv';
+import { RecommendationDetailedType } from '@/scripts/mergeRecommendationCsv';
 import { useEffect, useState } from 'react';
 
 
 const Page = () => {
   const [schoolsAndTowers, setSchoolsAndTowers] = useState<PopulationData[]>([]);
-  const [recommended, setRecommended] = useState<RecommendationType[]>([]);
+  const [recommended, setRecommended] = useState<RecommendationDetailedType[]>([]);
   
   useEffect(() => {
     const getSchoolsAndTowers = async () => {
