@@ -11,12 +11,11 @@ const Page = () => {
   
   useEffect(() => {
     const getSchoolsAndTowers = async () => {
-      const response = await fetch('/api/getSchoolsAndTowers', {
+      const response = await fetch('/api/getSchoolAndTowers', {
         method: 'GET'
       });
       const data = await response.json();
       setSchoolsAndTowers(data.data);
-      console.log(data);
     }
     getSchoolsAndTowers()
     const getRecommendation = async () => {
@@ -25,7 +24,6 @@ const Page = () => {
       });
       const data = await response.json();
       setRecommended(data.data);
-      console.log("top schools:", data);
     }
     getRecommendation()
   }, []);

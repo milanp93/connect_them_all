@@ -8,7 +8,7 @@ import fetch from 'node-fetch';
 import { CombinedData } from './mergeSchoolWithNearestStationCsv';
 
 const GOOGLE_ELEVATION_URL = 'https://maps.googleapis.com/maps/api/elevation/json';
-const GOOGLE_API_KEY = process.env.GOOGLE_ELEVATION_API_KEY; // Ensure this env variable is set
+const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_ELEVATION_API_KEY; // Ensure this env variable is set
 const NUM_SAMPLES = 3; // Number of sample points along the line
 
 /**
