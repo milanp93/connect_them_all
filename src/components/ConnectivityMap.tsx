@@ -66,55 +66,53 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
     }
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar with Top 5 Schools */}
-      <div
-        style={{
-          width: "25%",
-          padding: "10px",
-          backgroundColor: "#f9f9f9",
-          overflowY: "auto",
-          height: "100vh"
-        }}
-      >
-        <h3>Top 5 Schools to connect</h3>
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {recommended && recommended?.map((school, idx) => (
-            <li
-              key={idx}
-              style={{
-                marginBottom: "10px",
-                padding: "10px",
-                border: selectedSchool?.school_id_giga === school.schoolId ? "2px solid red" : "1px solid #ccc",
-                cursor: "pointer",
-                boxSizing: "border-box"
-              }}
-              onClick={() => {
-                const lat = parseFloat(school.lat);
-                const lng = parseFloat(school.lon);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                  panToLocation(lat, lng);
-                }
-              }}
+      <div className={`w-[400px] md:w-1/4 p-2 bg-gray-100 overflow-y-auto h-full sidebar ${!isOpen ? "-ml-[255px] sm:-ml-0" : "sm:-ml-0"}`}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Top 5 Schools to connect</h3>
+          <div className="md:hidden">
+            <button
+              className="bg-blue-500 text-white px-2 py-2 rounded"
+              onClick={() => {setIsOpen(!isOpen)}}
             >
-              <strong>{school.schoolName}</strong>
-              <br />
-              ID: {school.schoolId}
-              <br />
-              Impact Score: {school.scoreOfImpact}
-              <br />
-              Recommended Solution: {school.recommendedSolutionWhy}
-              <br />
-              Cost Estimation: {school.recommendedSolutionEstimatedCost}
-            </li>
+              Slide
+            </button>
+          </div>
+        </div>
+        <ul className={`list-none p-0 m-0 ${!isOpen ? "hidden sm:block" : "sm:block"}`}>
+          {recommended && recommended?.map((school, idx) => (
+        <li
+          key={idx}
+          className={`mb-2 p-2 border ${selectedSchool?.school_id_giga === school.schoolId ? "border-red-500" : "border-gray-300"} cursor-pointer box-border`}
+          onClick={() => {
+            const lat = parseFloat(school.lat);
+            const lng = parseFloat(school.lon);
+            if (!isNaN(lat) && !isNaN(lng)) {
+          panToLocation(lat, lng);
+            }
+          }}
+        >
+          <strong>{school.schoolName}</strong>
+          <br />
+          ID: {school.schoolId}
+          <br />
+          Impact Score: {school.scoreOfImpact}
+          <br />
+          Recommended Solution: {school.recommendedSolutionWhy}
+          <br />
+          Cost Estimation: {school.recommendedSolutionEstimatedCost}
+        </li>
           ))}
         </ul>
       </div>
 
       {/* Map Container */}
-      <div style={{ width: "75%", height: "100%", backgroundColor: "#f9f9f9" }}>
+      <div style={{ width: "100%", height: "100%", backgroundColor: "#f9f9f9" }}>
       <h1 style={{ height: "50px", textAlign: "center", margin: "10px 0px",marginRight: "10px", backgroundColor: "#f0f0f0", fontSize: "2em", fontWeight: "bold" }}>Connect them all</h1>
       {isLoaded && <GoogleMap
             mapContainerStyle={containerStyle}
