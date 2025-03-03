@@ -65,26 +65,39 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
       alert("Distance not available");
     }
   };
-
-  const [isOpen, setIsOpen] = useState(false);
-
+  console.log("selectedSchool",selectedSchool)
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar with Top 5 Schools */}
-      <div className={`w-[400px] md:w-1/4 p-2 bg-gray-100 overflow-y-auto h-full sidebar ${!isOpen ? "-ml-[255px] sm:-ml-0" : "sm:-ml-0"}`}>
+      <div className={`w-[400px] md:w-1/4 p-2 bg-gray-100 overflow-y-auto h-full sidebar hidden sm:block`}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Top 5 Schools to connect</h3>
           <div className="md:hidden">
             <button
               className="bg-blue-500 text-white px-2 py-2 rounded"
-              onClick={() => {setIsOpen(!isOpen)}}
+              onClick={() => {
+                const sidebar = document.querySelector('.sidebar');
+                const menuSlider = document.querySelector('.menu-slider');
+                if (sidebar) {
+                if (sidebar.classList.contains('hidden')) {
+                  sidebar.classList.remove('hidden');
+                } else {
+                  sidebar.classList.add('hidden');
+                }}
+                if (menuSlider) {
+                  if (menuSlider.classList.contains('hidden')) {
+                    menuSlider.classList.remove('hidden');
+                  } else {
+                    menuSlider.classList.add('hidden');
+                  }}
+              }}
             >
               Slide
             </button>
           </div>
         </div>
-        <ul className={`list-none p-0 m-0 ${!isOpen ? "hidden sm:block" : "sm:block"}`}>
+        <ul className={`list-none p-0 m-0`}>
           {recommended && recommended?.map((school, idx) => (
         <li
           key={idx}
@@ -113,7 +126,30 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
 
       {/* Map Container */}
       <div style={{ width: "100%", height: "100%", backgroundColor: "#f9f9f9" }}>
-      <h1 style={{ height: "50px", textAlign: "center", margin: "10px 0px",marginRight: "10px", backgroundColor: "#f0f0f0", fontSize: "2em", fontWeight: "bold" }}>Connect them all</h1>
+        <div className="flex justify-between items-center">
+        <div><button
+              className="bg-blue-500 text-white px-2 py-2 rounded ml-4 menu-slider sm:hidden"
+              onClick={() => {
+                const sidebar = document.querySelector('.sidebar');
+                const menuSlider = document.querySelector('.menu-slider');
+                if (sidebar) {
+                if (sidebar.classList.contains('hidden')) {
+                  sidebar.classList.remove('hidden');
+                } else {
+                  sidebar.classList.add('hidden');
+                }}
+                if (menuSlider) {
+                  if (menuSlider.classList.contains('hidden')) {
+                    menuSlider.classList.remove('hidden');
+                  } else {
+                    menuSlider.classList.add('hidden');
+                  }}
+              }}
+            >Slide</button></div>
+      <h1 className="flex py-2 text-center center my-2 mx-0 mr-2 text-3xl font-bold">Connect them all</h1>
+      <div className="w-5"/>
+      </div>
+
       {isLoaded && <GoogleMap
             mapContainerStyle={containerStyle}
             center={defaultCenter}
