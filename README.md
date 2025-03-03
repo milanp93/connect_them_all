@@ -1,9 +1,7 @@
 # Connect Them All
 
-<video width="640" height="360" controls>
-  <source src="./public/demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/b3b58b75-1dec-4650-abf3-a24d4a5b0c2c
+
 
 **Connect Them All** is an interactive Next.js application designed for public sector connectivity planning. This project integrates diverse data sources and AI-driven recommendations to identify the best connectivity solutions for schools in underserved regions. By combining geographic data, elevation profiles, population density (extracted from a local GeoTIFF), and AI-generated recommendations via an external API, the application offers actionable insights on the optimal solution for each school.
 
