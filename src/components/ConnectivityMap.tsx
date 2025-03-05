@@ -1,5 +1,5 @@
 'use client'
-import React, {  FC, useEffect, useState } from "react";
+import React, {  FC, useEffect, useMemo, useState } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -10,6 +10,10 @@ import {
 } from "@react-google-maps/api";
 import { PopulationData } from "@/scripts/mergePopulationDenciryCsv";
 import { RecommendationDetailedType } from "@/scripts/mergeRecommendationCsv";
+import { Badge } from "./ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Progress } from "./ui/progress";
+import { Separator } from "./ui/separator";
 
 const containerStyle = {
   width: "100%",
@@ -22,7 +26,63 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
   const [csvData, setCsvData] = useState<PopulationData[]>(schoolsAndTowers);
   const [selectedSchool, setSelectedSchool] = useState<PopulationData | null>(null);
   const [selectedTower, setSelectedTower] = useState<PopulationData | null>(null);
-
+  const [selectedTopSchool, setSelectedTopSchool] = useState<{reccoumented: RecommendationDetailedType, school?: PopulationData} | null>(null);
+  const topSchoolsData = useMemo(() => {
+    const topSchoolsDataObject:{[x:string]:PopulationData} = {}
+    schoolsAndTowers.filter(school=> recommended.find(rec=>rec.schoolId === school.school_id_giga)).forEach(school => topSchoolsDataObject[school.school_id_giga] = school)
+    return topSchoolsDataObject;
+  }, [recommended, schoolsAndTowers])
+  const markersMemorised = useMemo(() => {
+    return csvData ? csvData.filter(row => row.tower_lat && row.tower_lon && row.distance_km).map((row, idx) => {
+      if (!row.latitude || !row.longitude || !row.tower_lat || !row.tower_lon) return null;
+      const schoolLat = parseFloat(row.latitude);
+      const schoolLng = parseFloat(row.longitude);
+      const towerLat = parseFloat(row.tower_lat);
+      const towerLng = parseFloat(row.tower_lon);
+      const range = parseFloat(row.range ?? "0");
+      const distance = row.distance_km; // assuming field "distance" exists
+      if (
+        isNaN(range) ||
+        isNaN(schoolLat) ||
+        isNaN(schoolLng) ||
+        isNaN(towerLat) ||
+        isNaN(towerLng)
+      )
+        return null;
+      return (
+        <React.Fragment key={idx}>
+          {/* School Marker */}
+          <Marker
+            position={{ lat: schoolLat, lng: schoolLng }}
+            icon={{
+              url: "/school-icon.png",
+              scaledSize: new window.google.maps.Size(30, 30)
+            }}
+            onClick={() => handleMarkerClick(row, "school")}
+          />
+          <Marker
+            position={{ lat: towerLat, lng: towerLng }}
+            icon={{
+              url: "/signal-tower.png",
+              scaledSize: new window.google.maps.Size(30, 30)
+            }}
+            onClick={() => handleMarkerClick(row, "tower")}
+          />
+         
+          {/* Polyline connecting school and tower */}
+          <Polyline
+            path={[
+              { lat: schoolLat, lng: schoolLng },
+              { lat: towerLat, lng: towerLng }
+            ]}
+            options={{ strokeColor: "blue", strokeWeight: 2 }}
+            onClick={() => handlePolylineClick(distance)}
+          />
+        </React.Fragment>
+      );
+    }): null;
+  }, [csvData])
+  console.log("topSchoolsData",topSchoolsData);
   useEffect(() => {
     setCsvData(schoolsAndTowers);
   }, [schoolsAndTowers]);
@@ -31,22 +91,22 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_ELEVATION_API_KEY ?? "",
   })
 
-  const [map, setMap] = React.useState<google.maps.Map | null>(null)
+  // const [map, setMap] = React.useState<google.maps.Map | null>(null)
 
-  const onLoad = React.useCallback(function callback(map: google.maps.Map) {
-    setMap(map)
-  }, [])
+  // const onLoad = React.useCallback(function callback(map: google.maps.Map) {
+  //   setMap(map)
+  // }, [])
 
-  const onUnmount = React.useCallback(function callback() {
-    setMap(null)
-  }, [])
+  // const onUnmount = React.useCallback(function callback() {
+  //   setMap(null)
+  // }, [])
 
-  const panToLocation = (lat: number, lng: number) => {
-    if (map) {
-      map.panTo({ lat, lng });
-      map.setZoom(15);
-    }
-  };
+  // const panToLocation = (lat: number, lng: number) => {
+  //   if (map) {
+  //     map.panTo({ lat, lng });
+  //     map.setZoom(15);
+  //   }
+  // };
 
   const handleMarkerClick = (row: PopulationData, type: "school" | "tower") => {
     if (type === "school") {
@@ -65,17 +125,16 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
       alert("Distance not available");
     }
   };
-  console.log("selectedSchool",selectedSchool)
-
   return (
     <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar with Top 5 Schools */}
-      <div className={`w-[400px] md:w-1/4 p-2 bg-gray-100 overflow-y-auto h-full sidebar hidden sm:block`}>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Top 5 Schools to connect</h3>
-          <div className="md:hidden">
-            <button
-              className="bg-blue-500 text-white px-2 py-2 rounded"
+      <div className="flex-1 flex-col md:flex-row hidden md:flex sidebar">
+      <aside className="w-full border-r border-[#CCCCCC] bg-white md:w-[400px] dark:bg-slate-900 overflow-y-auto">
+          <div className="p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Top 5 Schools to connect</h2>
+          <button
+              className="bg-blue-500 text-white px-2 py-2 rounded sm:hidden"
               onClick={() => {
                 const sidebar = document.querySelector('.sidebar');
                 const menuSlider = document.querySelector('.menu-slider');
@@ -95,37 +154,76 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
             >
               Slide
             </button>
-          </div>
         </div>
-        <ul className={`list-none p-0 m-0`}>
-          {recommended && recommended?.map((school, idx) => (
-        <li
-          key={idx}
-          className={`mb-2 p-2 border ${selectedSchool?.school_id_giga === school.schoolId ? "border-red-500" : "border-gray-300"} cursor-pointer box-border`}
-          onClick={() => {
-            const lat = parseFloat(school.lat);
-            const lng = parseFloat(school.lon);
-            if (!isNaN(lat) && !isNaN(lng)) {
-          panToLocation(lat, lng);
-            }
-          }}
-        >
-          <strong>{school.schoolName}</strong>
-          <br />
-          ID: {school.schoolId}
-          <br />
-          Impact Score: {school.scoreOfImpact}
-          <br />
-          Recommended Solution: {school.recommendedSolutionWhy}
-          <br />
-          Cost Estimation: {school.recommendedSolutionEstimatedCost}
-        </li>
-          ))}
-        </ul>
+        <Separator className="my-3" />
+          </div>
+          <div className="px-3">
+        {recommended.map((school) => {
+          return (
+          <div
+            key={school.schoolId}
+            className={`mb-2 cursor-pointer rounded-lg p-1 transition-colors ${
+          selectedSchool?.school_id_giga === school.schoolId
+            ? "bg-blue-50 dark:bg-blue-950"
+            : "hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+            onClick={() => {setSelectedTopSchool({school: schoolsAndTowers.find(s => s.school_id_giga === school.schoolId) || undefined,reccoumented: school})}}
+          >
+            <Card
+          className={`border-0 shadow-none ${
+            selectedSchool?.school_id_giga === school.schoolId ? "bg-blue-50 dark:bg-blue-950" : "bg-transparent"
+          }`}
+            >
+          <CardHeader className="p-3 pb-0">
+            <div className="flex items-start justify-between">
+              <div>
+            <CardTitle className="text-base">{school.schoolName}</CardTitle>
+            <CardDescription className="mt-1 text-xs">ID: {school.schoolId}</CardDescription>
+              </div>
+              <Badge
+            variant="outline"
+            className="text-md font-medium px-2.5 py-1 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectedSchool(schoolsAndTowers.find(s => s.school_id_giga === school.schoolId) || null)
+            }}
+              >
+            Locate
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 pt-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">Impact Score:</span>
+              <span className="font-semibold text-blue-700 dark:text-blue-500">{school.scoreOfImpact}</span>
+            </div>
+            <Progress                      
+              value={parseFloat(school.scoreOfImpact)}
+              max={100}
+              className="mt-1 h-1.5 bg-slate-200 dark:bg-slate-700"
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Badge variant="outline" className="font-normal text-xs">
+            {school?.schoolId ? `${topSchoolsData?.[school.schoolId]?.distance_km} km` : "No data"}
+              </Badge>
+              <Badge variant="outline" className="font-normal text-xs">
+                {school.recommendedSolutionEstimatedCost}
+              </Badge>
+            </div>
+          </CardContent>
+            </Card>
+          </div>
+        )
+        })}
+          </div>
+          {/* <div className="mt-auto p-4">
+        <Button className="w-full bg-blue-600 hover:bg-blue-700">Connect All Schools</Button>
+          </div> */}
+        </aside>
       </div>
 
       {/* Map Container */}
-      <div style={{ width: "100%", height: "100%", backgroundColor: "#f9f9f9" }}>
+      <div  className="w-full h-full bg-white">
         <div className="flex justify-between items-center">
         <div><button
               className="bg-blue-500 text-white px-2 py-2 rounded ml-4 menu-slider sm:hidden"
@@ -154,57 +252,8 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
             mapContainerStyle={containerStyle}
             center={defaultCenter}
             zoom={15}
-            onLoad={onLoad}
-            onUnmount={onUnmount}
           >
-            {csvData.filter(row => row.tower_lat && row.tower_lon && row.distance_km).map((row, idx) => {
-              if (!row.latitude || !row.longitude || !row.tower_lat || !row.tower_lon) return null;
-              const schoolLat = parseFloat(row.latitude);
-              const schoolLng = parseFloat(row.longitude);
-              const towerLat = parseFloat(row.tower_lat);
-              const towerLng = parseFloat(row.tower_lon);
-              const range = parseFloat(row.range ?? "0");
-              const distance = row.distance_km; // assuming field "distance" exists
-              if (
-                isNaN(range) ||
-                isNaN(schoolLat) ||
-                isNaN(schoolLng) ||
-                isNaN(towerLat) ||
-                isNaN(towerLng)
-              )
-                return null;
-              return (
-                <React.Fragment key={idx}>
-                  {/* School Marker */}
-                  <Marker
-                    position={{ lat: schoolLat, lng: schoolLng }}
-                    icon={{
-                      url: "/school-icon.png",
-                      scaledSize: new window.google.maps.Size(30, 30)
-                    }}
-                    onClick={() => handleMarkerClick(row, "school")}
-                  />
-                  <Marker
-                    position={{ lat: towerLat, lng: towerLng }}
-                    icon={{
-                      url: "/signal-tower.png",
-                      scaledSize: new window.google.maps.Size(30, 30)
-                    }}
-                    onClick={() => handleMarkerClick(row, "tower")}
-                  />
-                 
-                  {/* Polyline connecting school and tower */}
-                  <Polyline
-                    path={[
-                      { lat: schoolLat, lng: schoolLng },
-                      { lat: towerLat, lng: towerLng }
-                    ]}
-                    options={{ strokeColor: "blue", strokeWeight: 2 }}
-                    onClick={() => handlePolylineClick(distance)}
-                  />
-                </React.Fragment>
-              );
-            })}
+            {markersMemorised}
 
             {/* InfoWindow for selected school */}
             {selectedSchool && (
@@ -257,7 +306,70 @@ const ConnectivityMap: FC<{schoolsAndTowers:PopulationData[], recommended: Recom
                 }}
              /></>
             )}
+            {selectedTopSchool && (
+                <div className={`absolute left-4 top-4 md:w-[380px] rounded-lg border border-[#CCCCCC] bg-white p-4 shadow-lg dark:bg-slate-900 ${window.innerWidth < 768 ? 'fixed inset-0 m-4' : ''}`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                  <h3 className="font-semibold">{selectedTopSchool.reccoumented.schoolName}</h3>
+                  <p className="text-xs text-muted-foreground">ID: {selectedTopSchool.reccoumented.schoolId}</p>
+                  </div>
+                  <div className="flex flex-col items-end">
+                  <button className=" text-2xl -mt-4 -mr-1 p-2 cursor-pointer"
+                  onClick={()=>{
+                    setSelectedTopSchool(null);
+                  }}>x</button>
+                  <Badge
+                    variant="outline"
+                    className="text-md font-medium bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 cursor-pointer"
+                    onClick={() => {
+                    if (selectedTopSchool?.school) {
+                      setSelectedSchool(selectedTopSchool.school);
+                      if(window.innerWidth < 768)
+                        setSelectedTopSchool(null);
+                    }
+                    }
+                    }
+                  >
+                    Locate
+                  </Badge>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                  <p className="text-xs text-muted-foreground">Impact Score</p>
+                  <p className="font-semibold text-blue-700 dark:text-blue-500">{selectedTopSchool.reccoumented.scoreOfImpact}</p>
+                  </div>
+                  <div>
+                  <p className="text-xs text-muted-foreground">Distance</p>
+                  <p className="font-bold">{`${selectedTopSchool?.school?.distance_km ?? "0"} km`}</p>
+                  </div>
+                  <div>
+                  <p className="text-xs text-muted-foreground">Population</p>
+                  <p className="font-bold">{selectedTopSchool?.school?.population_density??"0"}</p>
+                  </div>
+                  <div>
+                  <p className="text-xs text-muted-foreground">Cost Estimation</p>
+                  <p className="font-bold">{selectedTopSchool.reccoumented.recommendedSolutionEstimatedCost}</p>
+                  </div>
+                </div>
+
+                <Separator className="my-3" />
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Recommended Solution</p>
+                  <p className="mt-1 text-xs leading-relaxed">{selectedTopSchool.reccoumented.recommendedSolutionWhy}</p>
+                </div>
+
+                <div className="mt-3 flex justify-end">
+                  {/* <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  Connect School
+                  </Button> */}
+                </div>
+                </div>
+            )}
             </GoogleMap>}
+            
       </div>
     </div>
   );
